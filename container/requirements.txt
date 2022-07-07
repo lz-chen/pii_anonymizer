@@ -1,0 +1,7 @@
+numpy
+pandas
+flask
+gevent
+gunicorn
+presidio_analyzer
+presidio_anonymizer
