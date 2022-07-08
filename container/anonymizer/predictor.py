@@ -2,15 +2,20 @@ import json
 from typing import Optional, List
 
 import flask
-from presidio_analyzer import AnalyzerEngine
+import spacy
 from presidio_anonymizer import AnonymizerEngine
+
+from utils import load_analyzer_engine, detect_lang
 
 TAGGED_TEXT_MODE = "tagged_text"
 DETAIL_INFO_MODE = "detailed_info"
 REPLACED_TEXT_MODE = "replaced_text"
 
-analyzer = AnalyzerEngine()
+analyzer = load_analyzer_engine()
 anonymizer = AnonymizerEngine()
+
+nlp = spacy.load("en_core_web_sm", disable=["tagger", "ner"])
+nlp.add_pipe('language_detector', last=True)
 
 # entities = ["PHONE_NUMBER", "CREDIT_CARD", "EMAIL_ADDRESS",
 #             "IBAN_CODE", "LOCATION", "PERSON", "PHONE_NUMBER",
@@ -19,8 +24,10 @@ anonymizer = AnonymizerEngine()
 app = flask.Flask(__name__)
 
 
-def anonymize_text(text: str, mode: str = "tag", entities: Optional[List[str]] = None, lang: str = "en"):
+def anonymize_text(text: str, mode: str = "tag", entities: Optional[List[str]] = None, lang: Optional[str] = None):
     result = {}
+    if lang == "unknown":
+        lang = detect_lang(text, nlp)
     analyzer_result = analyzer.analyze(text=text,
                                        entities=entities,  # detect all predefined entities
                                        language=lang)
@@ -57,8 +64,9 @@ def ping():
 def handle_call():
     input_json = flask.request.get_json()
     response = []
+    mode = input_json["mode"]
     for text in input_json["input"]:
-        result = anonymize_text(text=text["text"], mode=text["mode"])
+        result = anonymize_text(text=text["text"], mode=mode, lang=text["lang"])
         response.append(result)
     result = {'output': response}
     result = json.dumps({"output": result})

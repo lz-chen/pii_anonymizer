@@ -1,5 +1,6 @@
 {"input":
-  [{"text" : "Hello Paulo Santos. The latest statement for your credit card account 1111-0000-1111-0000 was mailed to 123 Any Street, Seattle, WA 98109.", "mode": "tagged_text"},
-   {"text" : "My phone number is 212-555-5555", "mode": "detailed_info"},
-   {"text": "Hello this is Jamie Clark calling", "mode":  "detailed_info"}]
+  [{"text" : "Hello Paulo Santos. The latest statement for your credit card account 1111-0000-1111-0000 was mailed to 123 Any Street, Seattle, WA 98109."},
+   {"text" : "My phone number is 212-555-5555"},
+   {"text": "Hello this is Jamie Clark calling"}],
+  "mode": "detailed_info"
 }
