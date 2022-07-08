@@ -1,59 +1,18 @@
 import json
-from typing import Optional, List
-
 import flask
-import spacy
-from presidio_anonymizer import AnonymizerEngine
 
-from utils import load_analyzer_engine, detect_lang
-
-TAGGED_TEXT_MODE = "tagged_text"
-DETAIL_INFO_MODE = "detailed_info"
-REPLACED_TEXT_MODE = "replaced_text"
-
-analyzer = load_analyzer_engine()
-anonymizer = AnonymizerEngine()
-
-nlp = spacy.load("en_core_web_sm", disable=["tagger", "ner"])
-nlp.add_pipe('language_detector', last=True)
-
-# entities = ["PHONE_NUMBER", "CREDIT_CARD", "EMAIL_ADDRESS",
-#             "IBAN_CODE", "LOCATION", "PERSON", "PHONE_NUMBER",
-#             "US_PASSPORT", "US_SSN", "UK_NHS"]
+from container.anonymizer.pii_anonymizer import PiiAnonymizer
 
 app = flask.Flask(__name__)
 
-
-def anonymize_text(text: str, mode: str = "tag", entities: Optional[List[str]] = None, lang: Optional[str] = None):
-    result = {}
-    if lang == "unknown":
-        lang = detect_lang(text, nlp)
-    analyzer_result = analyzer.analyze(text=text,
-                                       entities=entities,  # detect all predefined entities
-                                       language=lang)
-    anonymizer_result = anonymizer.anonymize(text=text, analyzer_results=analyzer_result)
-    if mode == TAGGED_TEXT_MODE:
-        result[TAGGED_TEXT_MODE] = anonymizer_result.text
-    elif mode == DETAIL_INFO_MODE:
-        for res in analyzer_result:
-            d = res.__dict__.copy()
-            d.pop("analysis_explanation")
-            d.pop("recognition_metadata")
-            d["entity"] = text[res.start:res.end]
-            result[DETAIL_INFO_MODE] = d
-    elif mode == REPLACED_TEXT_MODE:
-        raise NotImplementedError
-    else:
-        raise ValueError("Mode not supported !!!")
-
-    return result
+pii_anonymizer = PiiAnonymizer()
 
 
 @app.route('/ping', methods=['GET'])
 def ping():
     # Check if the classifier was loaded correctly
     try:
-        analyzer
+        pii_anonymizer
         status = 200
     except:
         status = 400
@@ -66,7 +25,7 @@ def handle_call():
     response = []
     mode = input_json["mode"]
     for text in input_json["input"]:
-        result = anonymize_text(text=text["text"], mode=mode, lang=text["lang"])
+        result = pii_anonymizer.anonymize_text(text=text["text"], mode=mode, lang=text["lang"])
         response.append(result)
     result = {'output': response}
     result = json.dumps({"output": result})
