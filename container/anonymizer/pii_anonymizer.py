@@ -7,11 +7,22 @@ from presidio_anonymizer import AnonymizerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
 from presidio_analyzer.predefined_recognizers import PhoneRecognizer
+
 try:
-    from constants import SUPPORTED_LANG, TAGGED_TEXT_MODE, DETAIL_INFO_MODE, REPLACED_TEXT_MODE
+    from constants import (
+        SUPPORTED_LANG,
+        TAGGED_TEXT_MODE,
+        DETAIL_INFO_MODE,
+        REPLACED_TEXT_MODE,
+    )
     from utils import detect_lang
 except ModuleNotFoundError:
-    from container.anonymizer.constants import SUPPORTED_LANG, TAGGED_TEXT_MODE, DETAIL_INFO_MODE, REPLACED_TEXT_MODE
+    from container.anonymizer.constants import (
+        SUPPORTED_LANG,
+        TAGGED_TEXT_MODE,
+        DETAIL_INFO_MODE,
+        REPLACED_TEXT_MODE,
+    )
     from container.anonymizer.utils import detect_lang
 
 # entities = ["PHONE_NUMBER", "CREDIT_CARD", "EMAIL_ADDRESS",
@@ -23,12 +34,18 @@ class PiiAnonymizer:
     def __init__(self):
         self.anonymizer = AnonymizerEngine()
         self.analyzer = self._load_analyzer_engine()
+        # todo this does not need to be loaded if lang detect is not necessary
         self.nlp = self._nlp()
 
     @staticmethod
     def _nlp():
+        """
+        Load the en_core_web_sm from spacy and create
+        a pipeline for language detection
+        :return:
+        """
         nlp = spacy.load("en_core_web_sm", disable=["tagger", "ner"])
-        nlp.add_pipe('language_detector', last=True)
+        nlp.add_pipe("language_detector", last=True)
         return nlp
 
     @staticmethod
@@ -50,7 +67,9 @@ class PiiAnonymizer:
         # email_recognizer_no = EmailRecognizer(supported_language="no")
         #
         # phone_recognizer_en = PhoneRecognizer(supported_language="en", context=["phone", "number"])
-        phone_recognizer_no = PhoneRecognizer(supported_language="no", supported_regions=phonenumbers.SUPPORTED_REGIONS)
+        phone_recognizer_no = PhoneRecognizer(
+            supported_language="no", supported_regions=phonenumbers.SUPPORTED_REGIONS
+        )
         #
         registry = RecognizerRegistry()
         registry.load_predefined_recognizers(
@@ -66,22 +85,42 @@ class PiiAnonymizer:
         # Pass the created NLP engine and supported_languages to the AnalyzerEngine
         analyzer = AnalyzerEngine(
             registry=registry,
-            nlp_engine=nlp_engine_with_norwegian, supported_languages=["en", "no"]
+            nlp_engine=nlp_engine_with_norwegian,
+            supported_languages=["en", "no"],
         )
 
         return analyzer
 
-    def anonymize_text(self, text: str, mode: str = TAGGED_TEXT_MODE, entities: Optional[List[str]] = None,
-                       lang: str = "en"):
+    def anonymize_text(
+        self,
+        text: str,
+        mode: str = TAGGED_TEXT_MODE,
+        entities: Optional[List[str]] = None,
+        lang: str = "en",
+    ):
+        """
+
+        :param text:
+        :param mode:
+        :param entities:
+        :param lang:
+        :return:
+        """
         result = {}
         if lang == "unknown":
             lang = detect_lang(text, self.nlp)
+            if lang not in SUPPORTED_LANG:
+                raise ValueError(f"Support for language {lang} is not implemented yet!")
         elif lang not in SUPPORTED_LANG:
             raise ValueError(f"Support for language {lang} is not implemented yet!")
-        analyzer_result = self.analyzer.analyze(text=text,
-                                                entities=entities,  # detect all predefined entities
-                                                language=lang)
-        anonymizer_result = self.anonymizer.anonymize(text=text, analyzer_results=analyzer_result)
+        analyzer_result = self.analyzer.analyze(
+            text=text,
+            entities=entities,  # detect all predefined entities
+            language=lang,
+        )
+        anonymizer_result = self.anonymizer.anonymize(
+            text=text, analyzer_results=analyzer_result
+        )
         if mode == TAGGED_TEXT_MODE:
             result[TAGGED_TEXT_MODE] = anonymizer_result.text
         elif mode == DETAIL_INFO_MODE:
@@ -90,10 +129,12 @@ class PiiAnonymizer:
                 d = res.__dict__.copy()
                 d.pop("analysis_explanation")
                 d.pop("recognition_metadata")
-                d["entity"] = text[res.start:res.end]
+                d["entity"] = text[res.start : res.end]
                 result[DETAIL_INFO_MODE].append(d)
         elif mode == REPLACED_TEXT_MODE:
-            raise ValueError(f"Support for {REPLACED_TEXT_MODE} mode is not implemented yet!")
+            raise ValueError(
+                f"Support for {REPLACED_TEXT_MODE} mode is not implemented yet!"
+            )
         else:
             raise ValueError(f"Mode {mode} not supported!")
 

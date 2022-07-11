@@ -1,7 +1,5 @@
 FROM ubuntu:20.04
 
-MAINTAINER Lingzhen_Chen
-
 # 1. Define the packages required in our environment.
 RUN apt-get -y update && apt-get install -y --no-install-recommends \
          wget \
@@ -33,7 +31,7 @@ ENV PYTHONDONTWRITEBYTECODE=TRUE
 ENV PATH="/opt/program:${PATH}"
 ENV PYTHONPATH="/opt/program:${PYTHONPATH}"
 
-# 5. Define the folder (sentiment_analysis) where our inference code is located
+# 5. Define the folder where our inference code is located
 COPY ./anonymizer /opt/program
 WORKDIR /opt/program
 RUN chmod +x /opt/program/serve
