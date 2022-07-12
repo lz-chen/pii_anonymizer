@@ -1,7 +1,8 @@
 import json
 import flask
 
-from container.anonymizer.pii_anonymizer import PiiAnonymizer
+from pii_anonymizer import PiiAnonymizer
+
 
 app = flask.Flask(__name__)
 

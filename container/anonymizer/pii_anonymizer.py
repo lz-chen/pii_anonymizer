@@ -32,7 +32,6 @@ except ModuleNotFoundError:
 
 
 class PiiAnonymizer:
-    LANGUAGES_CONFIG_FILE = "./languages-config.yml"
     SUPPORTED_LANG = ["en", "no"]
 
     def __init__(self):
@@ -59,8 +58,8 @@ class PiiAnonymizer:
         return {
             "nlp_engine_name": "spacy",
             "models": [
-                {"lang_code": "no", "model_name": "nb_core_news_lg"},
-                {"lang_code": "en", "model_name": "en_core_web_lg"},
+                {"lang_code": "no", "model_name": "en_core_web_md"},
+                {"lang_code": "en", "model_name": "en_core_web_md"},
             ],
         }
 

@@ -18,9 +18,9 @@ RUN pip install -r /opt/requirements.txt && \
 
 # 3. Download necessary language module from spacy
 # as of now we support English and Norwegian
-RUN python3 -m spacy download en_core_web_lg
+RUN python3 -m spacy download en_core_web_md
 RUN python3 -m spacy download en_core_web_sm
-RUN python3 -m spacy download nb_core_news_lg
+RUN python3 -m spacy download nb_core_news_md
 
 # 4. Set some environment variables. PYTHONUNBUFFERED keeps Python from buffering our standard
 # output stream, which means that logs can be delivered to the user quickly. PYTHONDONTWRITEBYTECODE
