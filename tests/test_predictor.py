@@ -15,18 +15,17 @@ TEXT_EN_INFO = [
     {"end": 66, "entity": "212-555-5555", "entity_type": "PHONE_NUMBER", "start": 54},
 ]
 
-TEXT_NO = "Andreas Hansen, IT Sjef Bla Bla E-post: ahansen@blabla.com Tlf. 98 45 76 29"
-TEXT_NO_ANNO = "<PERSON>, IT Sjef Bla Bla E-post: <EMAIL_ADDRESS> Tlf. <PHONE_NUMBER>"
+TEXT_NO = "Andreas Hansen, E-post: ahansen@blabla.com"
+TEXT_NO_ANNO = "<PERSON>, E-post: <EMAIL_ADDRESS>"
 TEXT_NO_INFO = [
     {
-        "end": 58,
+        "end": 42,
         "entity": "ahansen@blabla.com",
         "entity_type": "EMAIL_ADDRESS",
-        "start": 40,
+        "start": 24,
     },
     {"end": 14, "entity": "Andreas Hansen", "entity_type": "PERSON", "start": 0},
-    {"end": 58, "entity": "blabla.com", "entity_type": "URL", "start": 48},
-    {"end": 75, "entity": "98 45 76 29", "entity_type": "PHONE_NUMBER", "start": 64},
+    {"end": 42, "entity": "blabla.com", "entity_type": "URL", "start": 32},
 ]
 
 
