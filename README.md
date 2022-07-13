@@ -49,9 +49,76 @@ English and Norwegian.
    save time for the anonymizer, since it does not need to load the 
     language detection module and run the detector. 
     Choices for the `"mode"` filed includes `"tagged_text"` for getting
-    result with PII masked with tags such as <PERSON>, <EMAIL>; and 
+    result with PII masked with tags such as <PERSON>, <EMAIL>. 
+    For example:
+    ```
+    {
+      "output": {
+        "output": [
+          {
+            "tagged_text": "Hello <PERSON>. The latest statement for your credit card account <CREDIT_CARD> was mailed to 123 Any Street, <LOCATION>, WA 98109."
+          },
+          {
+            "tagged_text": "My phone number is <PHONE_NUMBER>"
+          },
+          {
+            "tagged_text": "Hello this is <PERSON> calling"
+          }
+        ]
+      }
+    }
+    ```
+    
     `"detailed_info"` for getting detailed result per PII which
-    contains the start index, end index, entity type and entity itself.
+    contains the start index, end index, entity type and entity itself. For example:
+    ```
+    {
+      "output": {
+        "output": [
+          {
+            "detailed_info": [
+              {
+                "entity_type": "PERSON",
+                "start": 6,
+                "end": 18,
+                "score": 0.85,
+                "entity": "Paulo Santos"
+              },
+              {
+                "entity_type": "LOCATION",
+                "start": 120,
+                "end": 127,
+                "score": 0.85,
+                "entity": "Seattle"
+              }
+            ]
+          },
+          {
+            "detailed_info": [
+              {
+                "entity_type": "PHONE_NUMBER",
+                "start": 19,
+                "end": 31,
+                "score": 0.75,
+                "entity": "212-555-5555"
+              }
+            ]
+          },
+          {
+            "detailed_info": [
+              {
+                "entity_type": "PERSON",
+                "start": 14,
+                "end": 25,
+                "score": 0.85,
+                "entity": "Jamie Clark"
+              }
+            ]
+          }
+        ]
+      }
+    }
+    ```
 
 ### Deploy to AWS
 

@@ -37,6 +37,7 @@ class PiiAnonymizer:
     def __init__(self):
         self.anonymizer = AnonymizerEngine()
         self.analyzer = self._load_analyzer_engine()
+        self.nlp = self._nlp()
 
     @staticmethod
     def _nlp() -> Language:
@@ -115,8 +116,7 @@ class PiiAnonymizer:
         """
         result = {}
         if lang == "unknown":
-            nlp = self._nlp()
-            lang = detect_lang(text, nlp)
+            lang = detect_lang(text, self.nlp)
             if lang not in SUPPORTED_LANG:
                 raise ValueError(f"Support for language {lang} is not implemented yet!")
         elif lang not in SUPPORTED_LANG:
