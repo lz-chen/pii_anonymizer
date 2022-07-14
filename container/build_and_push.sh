@@ -13,7 +13,7 @@ then
     exit 1
 fi
 
-chmod +x anonymizer/serve
+chmod +x container/anonymizer/serve
 
 # ~/.local/bin/aws
 # Get the account number associated with the current IAM credentials
@@ -48,7 +48,7 @@ aws ecr get-login-password | docker login --username AWS \
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
 
-docker build  -t ${image} .
+docker build -t ${image} .
 docker tag ${image} ${fullname}
 
 docker push ${fullname}
