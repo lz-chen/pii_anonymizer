@@ -1,0 +1,56 @@
+name: Deploy to ECR
+
+on:
+  push:
+    branches: "**"  # [ master ]
+
+jobs:
+  ci:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - run: pip install -r container/requirements.txt
+
+      - name: Download Spacy language modules
+        run: | 
+          python3 -m spacy download en_core_web_md
+          python3 -m spacy download en_core_web_sm
+          python3 -m spacy download nb_core_news_md
+
+      - name: Run unittests
+        run: |
+          python -m unittest discover 
+
+  build:
+    needs: [ci]
+    name: Build Image
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-south-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push image to Amazon ECR
+      env:
+        IMAGE_TAG: presidio-anonymizer
+      run: |
+         ./build_and_push.sh ${IMAGE_TAG}
