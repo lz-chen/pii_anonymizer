@@ -18,8 +18,8 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
       - run: |
-        pip install -r container/requirements.txt
-        pip install ddt
+          pip install -r container/requirements.txt
+          pip install ddt
 
       - name: Download Spacy language modules
         run: | 
