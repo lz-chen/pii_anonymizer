@@ -55,5 +55,6 @@ jobs:
       env:
         IMAGE_TAG: presidio-anonymizer
       run: |
-        chmod +x container/build_and_push.sh 
-        container/build_and_push.sh ${IMAGE_TAG}
+        cd ./container
+        chmod +x build_and_push.sh
+        build_and_push.sh ${IMAGE_TAG}
