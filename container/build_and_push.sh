@@ -29,8 +29,8 @@ fi
 region=$(aws configure get region)
 region=${region:-us-west-2}
 
-
 fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image}:latest"
+echo "fullname: ${fullname}"
 
 # If the repository doesn't exist in ECR, create it.
 
