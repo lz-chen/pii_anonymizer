@@ -1,3 +1,4 @@
+import random
 from typing import Optional, List
 import phonenumbers
 
@@ -8,6 +9,10 @@ from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
 from presidio_analyzer.predefined_recognizers import PhoneRecognizer
 from spacy import Language
+from faker import Faker
+
+from container.anonymizer.no_id_recognizer import NorwegianIDRecognizer
+from presidio_anonymizer.entities import OperatorConfig
 
 try:
     from constants import (
@@ -26,6 +31,7 @@ except ModuleNotFoundError:
     )
     from container.anonymizer.utils import detect_lang
 
+
 # entities = ["PHONE_NUMBER", "CREDIT_CARD", "EMAIL_ADDRESS",
 #             "IBAN_CODE", "LOCATION", "PERSON", "PHONE_NUMBER",
 #             "US_PASSPORT", "US_SSN", "UK_NHS"]
@@ -33,6 +39,7 @@ except ModuleNotFoundError:
 
 class PiiAnonymizer:
     SUPPORTED_LANG = ["en", "no"]
+    faker = Faker()
 
     def __init__(self):
         self.anonymizer = AnonymizerEngine()
@@ -65,6 +72,34 @@ class PiiAnonymizer:
         }
 
     @staticmethod
+    def _fake_name(x):
+        return PiiAnonymizer.faker.name()
+
+    @staticmethod
+    def _random_digit(x):
+        return str(random.randint(10000000000, 99999999999))
+
+    def _custom_oprators(self):
+        """
+        Custom operators for the Anonymizer
+        :return: operator dictionary
+        """
+        config = {
+            "NORWEGIAN_ID": OperatorConfig(
+                "custom",
+                {
+                    "lambda": self._random_digit
+                },
+            ),
+            "PERSON": OperatorConfig(
+                "custom", {
+                    "lambda": self._fake_name
+                }
+            )
+        }
+        return config
+
+    @staticmethod
     def _load_analyzer_engine() -> AnalyzerEngine:
         """
         Load Presidio analyzer engine for processing. In addition to predefined recognizers,
@@ -77,12 +112,14 @@ class PiiAnonymizer:
         phone_recognizer_no = PhoneRecognizer(
             supported_language="no", supported_regions=phonenumbers.SUPPORTED_REGIONS
         )
+        id_recognizer_no = NorwegianIDRecognizer(supported_entities=["NORWEGIAN_ID"], supported_language="no")
         registry = RecognizerRegistry()
         registry.load_predefined_recognizers(
             nlp_engine=nlp_engine_with_norwegian, languages=SUPPORTED_LANG
         )
-
+        # registry.remove_recognizer()
         registry.add_recognizer(phone_recognizer_no)
+        registry.add_recognizer(id_recognizer_no)
 
         # Pass the created NLP engine and supported_languages to the AnalyzerEngine
         analyzer = AnalyzerEngine(
@@ -93,11 +130,11 @@ class PiiAnonymizer:
         return analyzer
 
     def anonymize_text(
-        self,
-        text: str,
-        mode: str = TAGGED_TEXT_MODE,
-        entities: Optional[List[str]] = None,
-        lang: str = "en",
+            self,
+            text: str,
+            mode: str = TAGGED_TEXT_MODE,
+            entities: Optional[List[str]] = None,
+            lang: str = "en",
     ) -> dict:
         """
         Anonymize text according to specified mode and entities
@@ -126,8 +163,12 @@ class PiiAnonymizer:
             entities=entities,
             language=lang,
         )
+        if mode == REPLACED_TEXT_MODE:
+            self._set_faker()
+        operators = self._custom_oprators() if mode == REPLACED_TEXT_MODE else None
         anonymizer_result = self.anonymizer.anonymize(
-            text=text, analyzer_results=analyzer_result
+            text=text, analyzer_results=analyzer_result,
+            operators=operators
         )
         if mode == TAGGED_TEXT_MODE:
             result[TAGGED_TEXT_MODE] = anonymizer_result.text
@@ -137,13 +178,14 @@ class PiiAnonymizer:
                 d = res.__dict__.copy()
                 d.pop("analysis_explanation")
                 d.pop("recognition_metadata")
-                d["entity"] = text[res.start : res.end]
+                d["entity"] = text[res.start: res.end]
                 result[DETAIL_INFO_MODE].append(d)
         elif mode == REPLACED_TEXT_MODE:
-            raise ValueError(
-                f"Support for {REPLACED_TEXT_MODE} mode is not implemented yet!"
-            )
+            result[REPLACED_TEXT_MODE] = anonymizer_result.text
         else:
             raise ValueError(f"Mode {mode} not supported!")
 
         return result
+
+    def _set_faker(self):
+        self.faker = Faker()
