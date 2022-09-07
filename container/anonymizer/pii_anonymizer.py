@@ -11,7 +11,6 @@ from presidio_analyzer.predefined_recognizers import PhoneRecognizer
 from spacy import Language
 from faker import Faker
 
-from container.anonymizer.no_id_recognizer import NorwegianIDRecognizer
 from presidio_anonymizer.entities import OperatorConfig
 
 try:
@@ -21,6 +20,7 @@ try:
         DETAIL_INFO_MODE,
         REPLACED_TEXT_MODE,
     )
+    from no_id_recognizer import NorwegianIDRecognizer
     from utils import detect_lang
 except ModuleNotFoundError:
     from container.anonymizer.constants import (
@@ -30,7 +30,7 @@ except ModuleNotFoundError:
         REPLACED_TEXT_MODE,
     )
     from container.anonymizer.utils import detect_lang
-
+    from container.anonymizer.no_id_recognizer import NorwegianIDRecognizer
 
 # entities = ["PHONE_NUMBER", "CREDIT_CARD", "EMAIL_ADDRESS",
 #             "IBAN_CODE", "LOCATION", "PERSON", "PHONE_NUMBER",
@@ -79,11 +79,12 @@ class PiiAnonymizer:
     def _random_digit(x):
         return str(random.randint(10000000000, 99999999999))
 
-    def _custom_oprators(self):
+    def _custom_operators(self, mode: str):
         """
         Custom operators for the Anonymizer
         :return: operator dictionary
         """
+
         config = {
             "NORWEGIAN_ID": OperatorConfig(
                 "custom",
@@ -97,7 +98,8 @@ class PiiAnonymizer:
                 }
             )
         }
-        return config
+        operators = config if mode == REPLACED_TEXT_MODE else None
+        return operators
 
     @staticmethod
     def _load_analyzer_engine() -> AnalyzerEngine:
@@ -163,12 +165,9 @@ class PiiAnonymizer:
             entities=entities,
             language=lang,
         )
-        if mode == REPLACED_TEXT_MODE:
-            self._set_faker()
-        operators = self._custom_oprators() if mode == REPLACED_TEXT_MODE else None
         anonymizer_result = self.anonymizer.anonymize(
             text=text, analyzer_results=analyzer_result,
-            operators=operators
+            operators=self._custom_operators(mode)
         )
         if mode == TAGGED_TEXT_MODE:
             result[TAGGED_TEXT_MODE] = anonymizer_result.text
