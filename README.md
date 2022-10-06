@@ -18,7 +18,7 @@ English and Norwegian.
 Run `start_up.sh` from the root directory, with optionally two argument for image name and the port number. For example:
 
 ```
-start_up.sh pii-anonymizer 8989
+./start_up.sh pii-anonymizer 8989
 ```
 
 This script does two things 

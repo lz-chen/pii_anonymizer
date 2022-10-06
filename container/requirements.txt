@@ -6,3 +6,4 @@ gunicorn
 presidio_analyzer
 presidio_anonymizer
 spacy_langdetect
+faker
